@@ -35,4 +35,4 @@ class Recipe(BaseModel):
 
 
 class Recipes(BaseModel):
-
+    ...
