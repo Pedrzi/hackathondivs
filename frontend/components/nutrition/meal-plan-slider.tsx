@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { Clock, ChevronRight } from "lucide-react"
 import { useRef } from "react"
 
@@ -54,9 +55,13 @@ export function MealPlanSlider() {
     <section className="mt-6" aria-label="Meal plan">
       <div className="flex items-center justify-between px-4 mb-4">
         <h2 className="text-lg font-bold tracking-tight text-foreground">Meal Plan</h2>
-        <button className="flex items-center gap-1 text-xs font-medium text-primary">
+        {/* Link para a nova página de cardápios com estilo preservado */}
+        <Link 
+          href="/cardapios" 
+          className="flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80 transition-opacity"
+        >
           See all <ChevronRight className="w-3.5 h-3.5" />
-        </button>
+        </Link>
       </div>
 
       <div
