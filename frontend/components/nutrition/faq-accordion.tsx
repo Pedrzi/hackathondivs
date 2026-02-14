@@ -43,7 +43,7 @@ export function FaqAccordion() {
               value={`item-${idx}`}
               className="border-b border-border/50 last:border-b-0"
             >
-              <AccordionTrigger className="px-4 py-3.5 text-sm font-bold text-foreground hover:no-underline hover:text-primary transition-colors [&[data-state=open]]:text-primary">
+              <AccordionTrigger className="px-4 py-3.5 text-sm font-bold text-foreground hover:no-underline hover:text-primary transition-colors data-[state=open]:text-primary">
                 {item.question}
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4 text-xs text-muted-foreground leading-relaxed">
