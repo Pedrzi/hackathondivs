@@ -1,5 +1,5 @@
 import requests
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 class OpenFoodFactsService:
     """
@@ -26,17 +26,17 @@ class OpenFoodFactsService:
         url = f"{self.BASE_URL}/{codigo_barras}.json"
 
         try:
-            print(f"🌍 A consultar OpenFoodFacts: {codigo_barras}...")
+            print(f"A consultar OpenFoodFacts: {codigo_barras}...")
             
             # Timeout de 10s para não prender o servidor se a internet estiver lenta
             response = requests.get(url, headers=self.headers, timeout=10)
             
             if response.status_code == 404:
-                print("❌ Produto não encontrado (404).")
+                print("Produto não encontrado (404).")
                 return None
             
             if response.status_code != 200:
-                print(f"⚠️ Erro na API: Status {response.status_code}")
+                print(f"Erro na API: Status {response.status_code}")
                 return None
 
             data = response.json()
@@ -45,12 +45,52 @@ class OpenFoodFactsService:
             if data.get("status") == 1:
                 return data.get("product")
             else:
-                print(f"❌ Status 0: Produto não existe na base.")
+                print(f"Status 0: Produto não existe na base.")
                 return None
 
         except requests.exceptions.Timeout:
-            print("â³ Timeout ao conectar com OpenFoodFacts.")
+            print("Timeout ao conectar com OpenFoodFacts.")
             return None
         except requests.exceptions.RequestException as e:
-            print(f"🔥 Erro de conexão: {e}")
+            print(f"Erro de conexão: {e}")
             return None
+        
+    def buscar_produto_por_nome(self, nome: str, numero_resultados_desejados) -> Optional[List[Dict[str, Any]]]:
+        if not nome:
+            return None
+
+        url = "https://world.openfoodfacts.org/cgi/search.pl"
+
+        params = {
+            "search_terms": nome,
+            "search_simple": 1,
+            "action": "process",
+            "json": 1,
+            "page_size": 1
+        }
+
+        try:
+            response = requests.get(url, headers=self.headers, params=params, timeout=10)
+
+            if response.status_code != 200:
+                print(f"Erro na pesquisa: {response.status_code}")
+                return None
+
+            data = response.json()
+            products = data.get("products", [])
+
+            if products:
+                return products[0:(numero_resultados_desejados-1)]
+            else:
+                print("Nenhum produto encontrado.")
+                return None
+
+        except requests.exceptions.RequestException as e:
+            print(f"Erro de conexão: {e}")
+            return None
+
+    
+if __name__ == "__main__":
+    print(OpenFoodFactsService().buscar_produto_por_nome("tomate"))
+    print("\n\n\n")
+    print(OpenFoodFactsService().buscar_produto_por_codigo("8445290615350"))
