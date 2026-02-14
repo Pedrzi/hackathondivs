@@ -69,7 +69,7 @@ export function ProgressCards() {
       <div className="bg-card rounded-2xl p-4 shadow-[0_5px_20px_rgba(0,0,0,0.05)]">
         {/* Main calorie ring */}
         <div className="flex items-center gap-4 mb-4 pb-4 border-b border-border">
-          <div className="relative w-20 h-20 flex-shrink-0">
+          <div className="relative w-20 h-20 shrink-0">
             <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
               <circle cx="40" cy="40" r="34" fill="none" stroke="hsl(var(--muted))" strokeWidth="5" />
               <circle

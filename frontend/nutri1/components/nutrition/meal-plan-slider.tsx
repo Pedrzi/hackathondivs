@@ -67,7 +67,7 @@ export function MealPlanSlider() {
         {meals.map((meal) => (
           <article
             key={meal.id}
-            className="flex-shrink-0 w-44 snap-start bg-card rounded-2xl overflow-hidden shadow-[0_5px_20px_rgba(0,0,0,0.05)] group cursor-pointer"
+            className="shrink-0 w-44 snap-start bg-card rounded-2xl overflow-hidden shadow-[0_5px_20px_rgba(0,0,0,0.05)] group cursor-pointer"
           >
             <div className="relative h-28 overflow-hidden">
               <Image

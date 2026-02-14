@@ -73,7 +73,7 @@ export function FloatingNotification() {
       aria-live="polite"
     >
       <div className={`${notification.bg} rounded-2xl p-4 flex items-center gap-3 shadow-lg shadow-primary/20`}>
-        <div className="w-9 h-9 rounded-xl bg-primary-foreground/20 flex items-center justify-center flex-shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-primary-foreground/20 flex items-center justify-center shrink-0">
           {notification.icon}
         </div>
         <div className="flex-1 min-w-0">
@@ -82,7 +82,7 @@ export function FloatingNotification() {
         </div>
         <button
           onClick={() => setDismissed(true)}
-          className="flex-shrink-0 w-7 h-7 rounded-full bg-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/30 transition-colors"
+          className="shrink-0 w-7 h-7 rounded-full bg-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/30 transition-colors"
           aria-label="Dismiss notification"
         >
           <X className="w-3.5 h-3.5 text-primary-foreground" />
