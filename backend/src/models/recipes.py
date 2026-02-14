@@ -28,6 +28,7 @@ class Ingredientes (BaseModel):
 
 class Recipe(BaseModel):
     # Uma string que será recolhida pelo bot 
-    modo_de_preparo : str = ...
+    modo_de_preparo : str
     #Classe de Ingredientes 
     ingredientes = Ingredientes 
+    tempo_de_preparo : int
