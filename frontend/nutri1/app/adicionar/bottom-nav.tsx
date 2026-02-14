@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 
 const navItems = [
   { icon: Home, label: "Home", href: "/" },
-  { icon: UtensilsCrossed, label: "Dispensa", href: "/dispensa" },
+  { icon: UtensilsCrossed, label: "Despensa", href: "/dispensa" },
   { icon: null, label: "Add", href: "/adicionar" }, // Agora aponta para a rota de adicionar
   { icon: BarChart3, label: "Stats", href: "#" },
   { icon: User, label: "Profile", href: "#" },

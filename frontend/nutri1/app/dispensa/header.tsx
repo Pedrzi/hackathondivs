@@ -37,7 +37,7 @@ export function Header() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Package className="w-4 h-4" />
-                  Dispensa
+                  Despensa
                 </Link>
                 {/* Você pode adicionar mais itens aqui no futuro */}
               </div>
