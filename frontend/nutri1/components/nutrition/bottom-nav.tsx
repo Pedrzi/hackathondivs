@@ -7,9 +7,9 @@ import { usePathname } from "next/navigation"
 const navItems = [
   { icon: Home, label: "Home", href: "/" },
   { icon: UtensilsCrossed, label: "Despensa", href: "/dispensa" },
-  { icon: null, label: "Add", href: "/adicionar" }, // Agora aponta para a rota de adicionar
+  { icon: null, label: "Add", href: "/adicionar" },
   { icon: BarChart3, label: "Stats", href: "#" },
-  { icon: User, label: "Profile", href: "#" },
+  { icon: User, label: "Profile", href: "/perfil" },
 ]
 
 export function BottomNav() {
@@ -22,7 +22,7 @@ export function BottomNav() {
     >
       <div className="flex items-center justify-around max-w-lg mx-auto px-2 py-2 relative">
         {navItems.map((item) => {
-          // Botão Central de "Add" - Reforçado com Link Invisível
+          
           if (!item.icon) {
             return (
               <div key={item.label} className="relative flex flex-col items-center">
@@ -32,7 +32,7 @@ export function BottomNav() {
                 >
                   <Plus className="w-6 h-6 text-primary-foreground" />
                 </button>
-                {/* Camada invisível para o clique no botão central */}
+                {}
                 <Link
                   href={item.href}
                   className="absolute -top-6 inset-x-0 bottom-0 z-120 cursor-pointer"

@@ -1,8 +1,8 @@
 "use client"
 
-import { Globe, Bell, Menu, Package } from "lucide-react"
+import { Globe, Bell, Menu, Package } from "lucide-react" // Importei o ícone Package para a Dispensa
 import { useState } from "react"
-import Link from "next/link" // Importação para navegação
+import Link from "next/link" // Importante para navegação no Next.js
 
 export function Header() {
   const [notificationCount] = useState(3)
@@ -22,22 +22,24 @@ export function Header() {
             <Menu className="w-5 h-5 text-foreground" />
           </button>
 
-          {/* Menu Dropdown */}
+          {/* Menu Dropdown Simples */}
           {isMenuOpen && (
             <>
+              {/* Overlay para fechar o menu ao clicar fora */}
               <div 
                 className="fixed inset-0 z-[-1]" 
                 onClick={() => setIsMenuOpen(false)} 
               />
               <div className="absolute left-0 mt-2 w-48 rounded-xl border border-border bg-popover p-2 shadow-lg animate-in fade-in zoom-in duration-200">
                 <Link 
-                  href="/dispensa"
+                  href="/dispensa" // Caminho da sua nova página
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted text-sm font-medium text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Package className="w-4 h-4" />
                   Despensa
                 </Link>
+                {/* Você pode adicionar mais itens aqui no futuro */}
               </div>
             </>
           )}
@@ -53,14 +55,9 @@ export function Header() {
 
         {/* Ações da Direita */}
         <div className="flex items-center gap-2">
-          {/* Ícone de Globo: Redireciona para a área de Nutricionistas */}
-          <Link 
-            href="/nutricionista" 
-            className="flex items-center justify-center w-10 h-10 rounded-xl bg-muted hover:bg-muted/80 transition-colors group"
-            title="Área do Nutricionista"
-          >
-            <Globe className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-          </Link>
+          <button className="flex items-center justify-center w-10 h-10 rounded-xl bg-muted">
+            <Globe className="w-5 h-5 text-muted-foreground" />
+          </button>
           
           <button className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-muted">
             <Bell className="w-5 h-5 text-muted-foreground" />
