@@ -36,11 +36,11 @@ class DispensaRepository:
             # Converter JSON do banco para nosso Modelo Pydantic
             # (Reaproveitando a lógica que já criamos antes)
             produto_obj = Produto(
-                id_codigo_barras=produto_raw["barcode"],
+                id_codigo_barras=produto_raw["id"],
                 nome=produto_raw["name"],
                 marca=produto_raw.get("brand", "Genérico"),
-                quantidade_embalagem_g=produto_raw.get("total_weight_g", 0),
-                info_nutricional=Macros(**produto_raw["nutrition_info"]), # Desempacota o JSON
+                quantidade_embalagem_g=produto_raw.get("weight", 0),
+                info_nutricional=Macros(**produto_raw["nutri_info"]), # Desempacota o JSON
                 dados_brutos=None
             )
             
@@ -53,7 +53,7 @@ class DispensaRepository:
 
     def adicionar_item(self, user_id: str, codigo_barras: str, quantidade: int = 1):
         """
-        Adiciona um item à dispensa do usuário padrão.
+        Adiciona itens à dispensa. Se já existir, SOMA à quantidade atual.
         """
         # 1. Pega ID da dispensa
         resp_pantry = supabase.table("pantries").select("id").eq("user_id", user_id).execute()
@@ -61,12 +61,32 @@ class DispensaRepository:
             raise Exception("Dispensa não encontrada")
         pantry_id = resp_pantry.data[0]["id"]
 
-        # 2. Insere na tabela intermediária (Upsert para somar se já existir seria ideal, mas insert simples para hackathon)
+        # 2. Verificar se o item já existe para pegar a quantidade atual
+        # Usamos 'product_id' conforme sua nova convenção
+        item_existente = supabase.table("pantry_items")\
+            .select("quantity")\
+            .eq("pantry_id", pantry_id)\
+            .eq("product_id", codigo_barras)\
+            .execute()
+
+        quantidade_final = quantidade
+
+        # Se já existe, somamos a quantidade atual com a nova
+        if item_existente.data:
+            quantidade_atual = item_existente.data[0]["quantity"]
+            quantidade_final += quantidade_atual
+
+        # 3. Upsert com a quantidade SOMADA
         data = {
             "pantry_id": pantry_id,
-            "product_barcode": codigo_barras,
-            "quantity": quantidade
+            "product_id": codigo_barras,
+            "quantity": quantidade_final
         }
         
-        # Upsert: se já existe, atualiza. (Requer que a constraint UNIQUE esteja criada no banco)
-        supabase.table("pantry_items").upsert(data, on_conflict="pantry_id, product_barcode").execute()
+        # O on_conflict garante que atualiza a linha existente baseada na chave composta
+        # Certifique-se de ter criado a constraint UNIQUE no banco: (pantry_id, product_id)
+        result = supabase.table("pantry_items")\
+            .upsert(data, on_conflict="pantry_id, product_id")\
+            .execute()
+        
+        return result.data
