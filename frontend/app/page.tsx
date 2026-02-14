@@ -3,7 +3,6 @@
 import { Header } from "@/components/nutrition/header"
 import { ProgressCards } from "@/components/nutrition/progress-cards"
 import { MealPlanSlider } from "@/components/nutrition/meal-plan-slider"
-import { ChatPreview } from "@/components/nutrition/chat-preview"
 import { OnboardingForm } from "@/components/nutrition/onboarding-form"
 import { FaqAccordion } from "@/components/nutrition/faq-accordion"
 import { FloatingNotification } from "@/components/nutrition/floating-notification"
@@ -17,7 +16,6 @@ export default function Page() {
       <main className="pb-24 pt-4">
         <ProgressCards />
         <MealPlanSlider />
-        <ChatPreview />
         <OnboardingForm />
         <FaqAccordion />
 
