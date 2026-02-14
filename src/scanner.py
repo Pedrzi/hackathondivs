@@ -1,75 +1,76 @@
 import cv2
-from pyzbar.pyzbar import decode
 import numpy as np
+from pyzbar.pyzbar import decode
+from openfoodfacts import API, APIVersion, Country, Environment, Flavor
+import time
+import json
 
-def start_robust_scanner():
-    # 1. INCREASE RESOLUTION
-    # Standard webcams default to 640x480. We force 1280x720 or higher for detail.
+api = API(
+    user_agent="nutrium++",
+    username=None,
+    password=None,
+    country=Country.world,
+    flavor=Flavor.off,
+    version=APIVersion.v2,
+    environment=Environment.org,
+)
+
+def scan_barcode_and_return():
+    """
+    Starts the camera, looks for a barcode, and returns the data string.
+    This function blocks (pauses the program) until a barcode is found.
+    """
+    # 1. Initialize Camera
     cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
-    # 2. CREATE SHARPENING KERNEL
-    # This matrix highlights edges (transitions from white to black)
-    sharpen_kernel = np.array([[-1,-1,-1], 
-                               [-1, 9,-1], 
-                               [-1,-1,-1]])
-
-    print("Robust Scanner started. Press 'q' to quit.")
-
-    while True:
-        ret, frame = cap.read()
-        if not ret: break
-
-        # --- PRE-PROCESSING PIPELINE ---
-        
-        # Step A: Convert to Grayscale
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     
-        # Step B: Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
-        # This is better than standard global thresholding for uneven lighting
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        contrast_enhanced = clahe.apply(gray)
+    # Force higher resolution for better detection (Mobile cameras are high res)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
-        # Step C: Sharpen the image
-        # This makes the "blur" between bars disappear
-        processed_frame = cv2.filter2D(contrast_enhanced, -1, sharpen_kernel)
+    # 2. Define Sharpening Kernel (for blurry images)
+    sharpen_kernel = np.array([[-1,-1,-1], [-1, 9,-1], [-1,-1,-1]])
 
-        # Optional: Binary Threshold (Extreme contrast)
-        # Uncomment the next line if lighting is VERY bad, but it can sometimes kill details
-        # _, processed_frame = cv2.threshold(processed_frame, 100, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    print("Camera starting... scanning for barcode...")
 
-        # -------------------------------
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                continue
 
-        # Pass the PROCESSED frame to the decoder, not the original color one
-        decoded_objects = decode(processed_frame)
+            # --- Image Enhancement Pipeline (No GUI) ---
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+            contrast_enhanced = clahe.apply(gray)
+            processed_frame = cv2.filter2D(contrast_enhanced, -1, sharpen_kernel)
+            # -------------------------------------------
 
-        # Draw the rectangle on the ORIGINAL frame so the user sees a nice video
-        for obj in decoded_objects:
-            barcode_data = obj.data.decode("utf-8")
-            barcode_type = obj.type
-            
-            # Draw on the original colorful frame
-            points = obj.polygon
-            if len(points) == 4:
-                pts = np.array(points, dtype=np.int32).reshape((-1, 1, 2))
-                cv2.polylines(frame, [pts], True, (0, 255, 0), 3)
+            # Decode
+            decoded_objects = decode(processed_frame)
 
-            text = f"{barcode_data}"
-            cv2.putText(frame, text, (points[0].x, points[0].y - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            
-            print(f"Scanned: {barcode_data}")
+            if decoded_objects:
+                # We found something!
+                obj = decoded_objects[0] # Take the first one found
+                barcode_data = obj.data.decode("utf-8")
+                
+                # Cleanup and Return
+                cap.release()
+                print(f"Success! Barcode found: {barcode_data}")
+                return barcode_data
 
-        # Show both windows so you can debug the 'view' the computer sees
-        cv2.imshow('User View (Original)', frame)
-        cv2.imshow('Computer View (Processed)', processed_frame)
+            time.sleep(0.01) 
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    except KeyboardInterrupt:
+        # Allow user to kill it with Ctrl+C if needed
+        cap.release()
+        return None
 
-    cap.release()
-    cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    start_robust_scanner()
+    # For testing purposes, run the scanner directly
+    product_id = scan_barcode_and_return()
+    print(f"Scanned Product ID: {product_id}")
+    api_response = api.product.get(product_id)
+    api_response_json = json.dumps(api_response, indent=4)
+    with open("product_info.json", "w") as f:
+        f.write(api_response_json)
