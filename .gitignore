@@ -1,6 +1,6 @@
 .venv
 
-__pycache__/
+__pycache__
 *.pyc
 *.pyo
 *.pyd
@@ -9,3 +9,5 @@ __pycache__/
 
 tests/
 backend/test_pantry.py
+backend/ultimo_produto_api.json
+__pycache__/*
