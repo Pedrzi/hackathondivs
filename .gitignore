@@ -1,13 +1,61 @@
-.venv
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
 
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+# C extensions
+*.so
 
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# =========================
+# Environment variables
+# =========================
 .env
+.env.*
+!.env.example
 
-tests/
-backend/test_pantry.py
-backend/ultimo_produto_api.json
-__pycache__/*
+# =========================
+# Testing / coverage
+# =========================
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+*.code-workspace
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Local data / temp files
+# =========================
+*.sqlite3
+*.db
+*.json
