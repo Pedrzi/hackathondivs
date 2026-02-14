@@ -1,7 +1,6 @@
 from src.repositories.supabase_client import supabase
 from src.models.products import Produto, ItemDispensa, Macros
 from typing import List
-from uuid import UUID
 
 class DispensaRepository:
     def listar_itens_do_usuario(self, user_id: str) -> List[ItemDispensa]:

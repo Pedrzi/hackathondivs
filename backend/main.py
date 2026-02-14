@@ -5,6 +5,8 @@ from src.services.calc import CalculadoraAderenciaService
 from src.services.openfoodfacts import OpenFoodFactsService # (Implementação simples abaixo)
 from src.models.meals import Refeicao
 from src.models.products import Produto
+from src.controllers import pantry_controller
+
 
 app = FastAPI(title="Nutrium++ Backend", version="1.0.0")
 
@@ -55,6 +57,8 @@ def rota_calcular_aderencia(dados: RequestCalculoAderencia):
         "nova_aderencia": round(novo_score, 2),
         "status": "Aprovado" if novo_score >= dados.aderencia_atual else "Atenção"
     }
+
+app.include_router(pantry_controller.router)
 
 if __name__ == "__main__":
     import uvicorn
