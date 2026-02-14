@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, List
+from pydantic import BaseModel, Field
 from .products import Produto
 from .meals import Macros
 
@@ -22,7 +22,7 @@ class Ingrediente(BaseModel, self):
 
 
 class Ingredientes (BaseModel):
-    lista_ingredientes = List[Ingrediente]
+    lista_ingredientes = list[Ingrediente]
           
 
 
@@ -32,3 +32,7 @@ class Recipe(BaseModel):
     #Classe de Ingredientes 
     ingredientes = Ingredientes 
     tempo_de_preparo : int
+
+
+class Recipes(BaseModel):
+

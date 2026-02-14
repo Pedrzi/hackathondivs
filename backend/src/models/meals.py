@@ -1,4 +1,6 @@
 from pydantic import BaseModel, Field
+from .products import Produto
+from .recipes import Recipe
 
 class Macros(BaseModel):
     calorias: float = Field(default=0, description="Kcal totais")
@@ -10,5 +12,5 @@ class Macros(BaseModel):
 class Refeicao(BaseModel):
     """Representa tanto uma refeição planejada quanto uma realizada"""
     nome: str = Field(..., description="Ex: Almoço, Jantar")
-    alimentos: list[str] = [] 
-    macros: Macros
+    alimentos: list[Produto|Recipe] = [] # Lista de receita + produtos a parte 
+    macros: Macros ## SOMA das calorias de todos as coisas consumidas 
