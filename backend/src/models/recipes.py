@@ -1,38 +1,32 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, Dict
+from functools import reduce
 from .products import Produto
 from .meals import Macros
+from services.openfoodfacts import procura_produto_por_nome 
 
 class Ingrediente(BaseModel, self):
      # Recebe já o nome do produto 
      name : str 
      # quantidade em gramas usada para a receita 
      quantidade : float = Field(...,ge = 0, le= 200)
+     # preciso alterar isso para informações nutricionais
      calorias : float 
-
-
-     def calculate_calorias(cls,self, name):
-        ... #Precisa procurar o produto na dispensa pela ""nome""" 
-            #supondo que já temos o 
-        produto: Produto
-        info_nutri = produto.info_nutricional
-        # As calorias totais corresponde as calorias que temos no produto que é sempre kcal/100g
-        calorias_total : float = info_nutri.calorias 
-        caloria_ingr : float = self.quantidade * (calorias_total/ 100) 
-        self.calorias = caloria_ingr
+    
+    
+     model_config = ConfigDict(frozen=True)
 
 
 class Ingredientes (BaseModel):
-    lista_ingredientes = list[Ingrediente]
+    ingredientes = Dict[Ingrediente, Macros]
           
 
 
 class Recipe(BaseModel):
     # Uma string que será recolhida pelo bot 
     modo_de_preparo : str
-    #Classe de Ingredientes 
-    ingredientes = Ingredientes 
-    tempo_de_preparo : int
+    #Define um dicionário, key: Um Objeto da classe Ingrediente, value: quantidade em gramas preciso para a receita
+    ingredientes = Ingredientes
+    macroTotal = reduce(lambda x, y: x + y, ingredientes.values(), Macros()) 
+    tempo_de_preparo : int = 0
 
 
-class Recipes(BaseModel):
-    ...
