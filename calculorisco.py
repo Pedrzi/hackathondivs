@@ -17,7 +17,7 @@ class PlanoAlimentar:
         self.aderencia = aderencia_inicial
         self.tolerancia = tolerancia
 
-    def calcula_risco(self, refeicao_plano: Refeicao, refeicao_real: Refeicao, diferenca_ontem, diferenca_anteontem):
+    def calcula_aderencia(self, refeicao_plano: Refeicao, refeicao_real: Refeicao, diferenca_ontem, diferenca_anteontem):
         dif_cal = abs(refeicao_plano.calorias - refeicao_real.calorias) / refeicao_plano.calorias if refeicao_plano.calorias != 0 else 0
         dif_prot = abs(refeicao_plano.proteinas - refeicao_real.proteinas) / refeicao_plano.proteinas if refeicao_plano.proteinas != 0 else 0
         dif_carb = abs(refeicao_plano.carbohidratos - refeicao_real.carbohidratos) / refeicao_plano.carbohidratos if refeicao_plano.carbohidratos != 0 else 0
@@ -46,3 +46,14 @@ class PlanoAlimentar:
         self.aderencia = max(0, min(10, self.aderencia))
 
         return self.aderencia
+
+    def ordena_lista_refeicoes(self, lista_refeicoes, refeicao_padrao):
+        lista_refeicoes_ordenada = []
+
+        for refeicao in lista_refeicoes:
+            lista_refeicoes_ordenada.append((refeicao.calcula_aderencia(refeicao_padrao), refeicao))
+        
+        lista_refeicoes_ordenada.sort(reverse=True)
+        
+        return lista_refeicoes_ordenada
+
