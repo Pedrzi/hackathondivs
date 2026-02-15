@@ -4,13 +4,22 @@ from src.repositories.meal_logs_repository import MealLogsRepository
 from src.repositories.meal_plans_repository import MealPlansRepository
 from typing import List
 import math
+from src.repositories.user_repository import UsuarioRepository
+from src.repositories.meal_logs_repository import MealLogsRepository
+from src.repositories.meal_plans_repository import MealPlansRepository
+from typing import List
+import math
 
 class CalculadoraAderenciaService:
     """
     Calculadora de aderência que considera a densidade de erros recentes
     para ajustar a penalização de forma logarítmica.
     Stateless.
+    Calculadora de aderência que considera a densidade de erros recentes
+    para ajustar a penalização de forma logarítmica.
+    Stateless.
     """
+
 
     PESOS = {
         "calorias": 0.2,
@@ -87,3 +96,4 @@ class CalculadoraAderenciaService:
         
         # 9. Restringido entre 0 e 10
         return max(0.0, min(10.0, novo_score))
+

@@ -25,10 +25,16 @@ async def obter_produto_por_codigo(codigo_barras: str):
 
 @router.get("/nome/{nome}", response_model=Produto)
 async def  obter_produto_por_nome(nome: str):
-    """"
+    """
     Busca um produto pelo nome
     1. Tenta buscar no OpenFoodFacts
     2. Formata para o nosso padrão (Model Product)
     """
-    ...
+    dados_brutos = service_off.buscar_produto_por_nome(nome, 1)
+
+    if not dados_brutos:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    
+    produto_formatado = Produto.criar_do_openfoodfacts(dados_brutos)
+    return produto_formatado
 
