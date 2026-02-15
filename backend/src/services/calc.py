@@ -1,4 +1,7 @@
 from src.models.meals import Refeicao
+from src.repositories.user_repository import UsuarioRepository
+from src.repositories.meal_logs_repository import MealLogsRepository
+from src.repositories.meal_plans_repository import MealPlansRepository
 from typing import List
 import math
 
@@ -34,16 +37,18 @@ class CalculadoraAderenciaService:
         contagem_erros = sum(1 for e in erros_anteriores if e > self.tolerancia)
         return contagem_erros / len(erros_anteriores)
 
-    def calcular_novo_score(self, 
-                            meta: Refeicao, 
-                            realizado: Refeicao, 
-                            aderencia_atual: float,
-                            erros_anteriores: List[float]) -> float:
+    def calcular_novo_score(self, userid, erros_anteriores=[]) -> float:
         """
         Calcula a nova aderência do usuário considerando:
         - erro da refeição atual
         - densidade de erros recentes (janela de N refeições)
         """
+
+        meta = MealPlansRepository.buscar_usuario(userid)
+        realizado = MealLogsRepository.buscar_usuario(userid)
+        aderencia_atual = UsuarioRepository.buscar_usuario(userid)
+
+
         # 1. Calcular diferenças individuais da refeição atual
         erros = {
             "calorias": self._calcular_diferenca_percentual(meta.macros.calorias, realizado.macros.calorias),
@@ -80,6 +85,6 @@ class CalculadoraAderenciaService:
             if len(erros_anteriores) >= self.janela_dias:
                 erros_anteriores.pop(0)
             erros_anteriores.append(erro_hoje)
-
+        
         # 9. Clamp entre 0 e 10
         return max(0.0, min(10.0, novo_score))
