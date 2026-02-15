@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useRef } from "react"
 import { Header } from "@/components/nutrition/header"
@@ -10,9 +10,9 @@ import {
 import Link from "next/link"
 
 const pacientesMock = [
-  { id: 1, nome: "João Silva", objetivo: "Perda de Peso" },
-  { id: 2, nome: "Maria Santos", objetivo: "Hipertrofia" },
-  { id: 3, nome: "Pedro Costa", objetivo: "Saúde" },
+  { id: 1, nome: "João Silva", objetivo: "Perda de Peso", score: 2 }, // Vermelho
+  { id: 2, nome: "Maria Santos", objetivo: "Hipertrofia", score: 6 }, // Laranja
+  { id: 3, nome: "Pedro Costa", objetivo: "Saúde", score: 9 },      // Verde
 ]
 
 const initialPlanos = [
@@ -69,7 +69,7 @@ export default function BodyNutricionista() {
       />
 
       <main className="p-4 pb-12 space-y-6">
-        {/* HEADER DO PAINEL COM ÍCONES DE NAVEGAÇÃO */}
+        {/* HEADER DO PAINEL */}
         <header className="mt-2 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Painel Profissional</h1>
@@ -77,7 +77,6 @@ export default function BodyNutricionista() {
           </div>
           
           <div className="flex items-center gap-2">
-            {/* Ícone de Casinha: Retorna à página principal do app */}
             <Link 
               href="/" 
               className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center border border-border hover:bg-muted/80 transition-colors"
@@ -86,7 +85,6 @@ export default function BodyNutricionista() {
               <Home className="w-6 h-6 text-muted-foreground" />
             </Link>
 
-            {/* Ícone de Perfil: Leva ao Perfil Profissional da Nutricionista */}
             <Link 
               href="/nutricionista/perfil"
               className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 hover:bg-primary/20 transition-colors"
@@ -179,20 +177,37 @@ export default function BodyNutricionista() {
               </div>
 
               <div className="space-y-2">
-                {pacientesMock.filter(p => p.nome.toLowerCase().includes(searchTerm.toLowerCase())).map((paciente) => (
-                  <div key={paciente.id} className="bg-card p-4 rounded-xl border border-border/40 shadow-sm flex justify-between items-center group hover:border-primary transition-all">
-                    <div>
-                      <p className="text-sm font-bold text-foreground">{paciente.nome}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold">Objetivo: {paciente.objetivo}</p>
+                {pacientesMock.filter(p => p.nome.toLowerCase().includes(searchTerm.toLowerCase())).map((paciente) => {
+                  // Lógica de cores baseada no score (0-10)
+                  const getStatusColor = (n: number) => {
+                    if (n <= 3) return "bg-red-500"
+                    if (n <= 7) return "bg-orange-500"
+                    return "bg-green-500"
+                  }
+
+                  return (
+                    <div key={paciente.id} className="bg-card p-4 rounded-xl border border-border/40 shadow-sm flex justify-between items-center group hover:border-primary transition-all">
+                      <div>
+                        <p className="text-sm font-bold text-foreground">{paciente.nome}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold">Objetivo: {paciente.objetivo}</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        {/* Quadradinho com número e cor dinâmica */}
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black text-white shadow-sm ${getStatusColor(paciente.score)}`}>
+                          {paciente.score}
+                        </div>
+
+                        <Link 
+                          href={`/nutricionista/${paciente.id}`} 
+                          className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Link>
+                      </div>
                     </div>
-                    <Link 
-                      href={`/nutricionista/${paciente.id}`} 
-                      className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </Link>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
