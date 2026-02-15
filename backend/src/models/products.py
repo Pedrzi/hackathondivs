@@ -7,6 +7,9 @@ class Produto(BaseModel):
     nome: str
     marca: str = "Desconhecida"
     quantidade_embalagem_g: float = 0
+    imagem_url: Optional[str] = None
+    
+    # Informação nutricional padronizada (por 100g ou porção)
     info_nutricional: Macros
     dados_brutos: Optional[Dict[str, Any]] = Field(default=None, exclude=True)
 
@@ -37,7 +40,8 @@ class Produto(BaseModel):
                 nome=item.get('product_name', 'Produto Sem Nome'),
                 marca=item.get('brands', 'Genérico'),
                 quantidade_embalagem_g=float(item.get('product_quantity', 0)),
-                info_nutricional=macros,
+                imagem_url=dados.get('image_url'),
+            info_nutricional=macros,
                 dados_brutos=item
             )
             produtos.append(produto)

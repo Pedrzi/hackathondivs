@@ -1,5 +1,6 @@
 import requests
 from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List
 
 class OpenFoodFactsService:
     """
@@ -27,6 +28,7 @@ class OpenFoodFactsService:
 
         try:
             print(f"A consultar OpenFoodFacts: {codigo_barras}...")
+            print(f"A consultar OpenFoodFacts: {codigo_barras}...")
             
             # Timeout de 10s para não prender o servidor se a internet estiver lenta
             response = requests.get(url, headers=self.headers, timeout=10)
@@ -37,6 +39,7 @@ class OpenFoodFactsService:
             
             if response.status_code != 200:
                 print(f"Erro na API: Status {response.status_code}")
+                print(f"Erro na API: Status {response.status_code}")
                 return None
 
             data = response.json()
@@ -46,16 +49,18 @@ class OpenFoodFactsService:
                 return data.get("product")
             else:
                 print(f"Status 0: Produto não existe na base.")
+                print(f"Status 0: Produto não existe na base.")
                 return None
 
         except requests.exceptions.Timeout:
+            print("Timeout ao conectar com OpenFoodFacts.")
             print("Timeout ao conectar com OpenFoodFacts.")
             return None
         except requests.exceptions.RequestException as e:
             print(f"Erro de conexão: {e}")
             return None
         
-    def buscar_produto_por_nome(self, nome: str, numero_resultados_desejados) -> Optional[List[Dict[str, Any]]]:
+    def buscar_produto_por_nome(self, nome: str, numero_resultados_desejados: int) -> Optional[List[Dict[str, Any]]]:
         if not nome:
             return None
 
@@ -66,7 +71,7 @@ class OpenFoodFactsService:
             "search_simple": 1,
             "action": "process",
             "json": 1,
-            "page_size": 1
+            "page_size": numero_resultados_desejados
         }
 
         try:
@@ -91,4 +96,6 @@ class OpenFoodFactsService:
 
     
 if __name__ == "__main__":
-    print(OpenFoodFactsService().buscar_produto_por_nome("tomate", 3))
+    print(OpenFoodFactsService().buscar_produto_por_nome("tomate", 10))
+    print("\n\n\n")
+    print(OpenFoodFactsService().buscar_produto_por_codigo("8445290615350"))

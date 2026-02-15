@@ -8,6 +8,8 @@ class UsuarioBase(BaseModel):
     Campos comuns entre criação e leitura.
     Reflete os tipos do banco: int8 (BigInt), int4 (Integer), int2 (SmallInt).
     """
+
+    name: Optional[str] = Field(default="Paciente sem nome", description="Nome do usuário")
     age: int = Field(..., description="Idade (bigint)")
     height: int = Field(..., description="Altura em cm (integer)")
     weight: int = Field(..., description="Peso em gramas (integer)")
@@ -24,11 +26,8 @@ class UsuarioCreate(UsuarioBase):
 
 class Usuario(UsuarioBase):
     """
-    Schema completo usado para LEITURA (GET).
-    Representa a linha exata no banco de dados.
+    Representa um paciente/usuário no sistema.
     """
     id: UUID
-    created_at: datetime
-
-    # Configuração necessária para compatibilidade com ORMs/Bancos
-    model_config = ConfigDict(from_attributes=True)
+    created_at: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True, extra='ignore')

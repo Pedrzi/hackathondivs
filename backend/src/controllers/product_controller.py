@@ -19,7 +19,7 @@ async def obter_produto_por_codigo(codigo_barras: str):
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     
     # Usa a fábrica que criamos no models/produto.py
-    produto_formatado = Produto.criar_do_openfoodfacts(dados_brutos)
+    produto_formatado = Produto.criar_do_openfoodfacts([dados_brutos])
     
     return produto_formatado
 
@@ -35,6 +35,21 @@ async def  obter_produto_por_nome(nome: str):
     if not dados_brutos:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     
-    produto_formatado = Produto.criar_do_openfoodfacts(dados_brutos)
+    produto_formatado = Produto.criar_do_openfoodfacts(dados_brutos[0])
     return produto_formatado
 
+
+@router.get("/search/{nome}", response_model=list[Produto])
+async def obter_produtos_por_nome(nome: str):
+    """
+    Busca produtos pelo nome
+    1. Tenta buscar no OpenFoodFacts
+    2. Formata para o nosso padrão (Model Product)
+    """
+    dados_brutos = service_off.buscar_produto_por_nome(nome, 5)
+
+    if not dados_brutos:
+        raise HTTPException(status_code=404, detail="Nenhum produto encontrado")
+
+    produtos_formatados = [Produto.criar_do_openfoodfacts(produto) for produto in dados_brutos]
+    return produtos_formatados
