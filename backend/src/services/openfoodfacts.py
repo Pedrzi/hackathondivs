@@ -80,7 +80,7 @@ class OpenFoodFactsService:
             products = data.get("products", [])
 
             if products:
-                return products[0:(numero_resultados_desejados-1)]
+                return products[0:numero_resultados_desejados]
             else:
                 print("Nenhum produto encontrado.")
                 return None
@@ -91,6 +91,4 @@ class OpenFoodFactsService:
 
     
 if __name__ == "__main__":
-    print(OpenFoodFactsService().buscar_produto_por_nome("tomate"))
-    print("\n\n\n")
-    print(OpenFoodFactsService().buscar_produto_por_codigo("8445290615350"))
+    print(OpenFoodFactsService().buscar_produto_por_nome("tomate", 3))
