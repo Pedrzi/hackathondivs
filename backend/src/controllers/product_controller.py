@@ -7,8 +7,6 @@ service_off = OpenFoodFactsService()
 
 @router.get("/code/{codigo_barras}", response_model=Produto)
 async def obter_produto_por_codigo(codigo_barras: str):
-@router.get("/code/{codigo_barras}", response_model=Produto)
-async def obter_produto_por_codigo(codigo_barras: str):
     """
     Busca um produto pelo código de barras.
     1. Tenta buscar no OpenFoodFacts.
