@@ -23,41 +23,108 @@ import {
 // CONFIGURAÇÃO DO ENDPOINT
 const API_URL = ""
 function BarcodeScanner({ onResult, onClose }: { onResult: (code: string) => void, onClose: () => void }) {
-  // Usamos useRef para acessar o elemento de vídeo diretamente
   const videoRef = useRef<HTMLVideoElement>(null)
-  const controlsRef = useRef<any>(null)
+  const codeReader = useRef(new BrowserMultiFormatReader())
+  const [error, setError] = useState<React.ReactNode>("")
 
   useEffect(() => {
-    if (!videoRef.current) return
+    let stream: MediaStream | null = null;
+    let controls: any = null;
+    let isMounted = true; // Flag para rastrear se o componente ainda existe
 
-    const codeReader = new BrowserMultiFormatReader()
-    
-    // Inicia a leitura da câmera
-    codeReader.decodeFromVideoDevice(
-      undefined, // undefined usa a câmera padrão
-      videoRef.current,
-      (result, error, controls) => {
-        if (result) {
-          onResult(result.getText())
-          controls.stop() // Para o scan após o primeiro sucesso
+    const startCamera = async () => {
+      // 1. Verificação de Permissões / HTTPS
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (isMounted) {
+          setError(
+            <div className="flex flex-col gap-2">
+              <p>Navegador incompatível ou sem HTTPS.</p>
+              <p className="text-xs opacity-80">Use Ngrok (HTTPS) ou Localhost.</p>
+            </div>
+          )
+        }
+        return
+      }
+
+      try {
+        // 2. Solicitar stream manualmente
+        const newStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: "environment" } 
+        })
+        
+        // Se o utilizador fechou o modal enquanto a câmera carregava, paramos aqui
+        if (!isMounted) {
+          newStream.getTracks().forEach(track => track.stop());
+          return;
+        }
+
+        stream = newStream;
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          
+          // Tenta reproduzir o vídeo, capturando erros de interrupção
+          try {
+            await videoRef.current.play();
+          } catch (e: any) {
+            // Ignora erro se o vídeo foi removido do DOM (modal fechou)
+            if (e.name === 'AbortError' || e.message.includes('interrupted')) {
+              return;
+            }
+            throw e;
+          }
+          
+          if (!isMounted) return;
+
+          // 3. Iniciar Decodificação
+          controls = await codeReader.current.decodeFromVideoElement(
+            videoRef.current, 
+            (result, err) => {
+              if (isMounted && result) {
+                const text = result.getText();
+                if (text) {
+                  onResult(text);
+                }
+              }
+            }
+          );
+        }
+      } catch (err: any) {
+        if (!isMounted) return;
+
+        console.error("Camera Error:", err)
+        if (err.name === 'NotAllowedError') {
+             setError("Permissão de câmera negada.")
+        } else if (err.message && err.message.includes("set photo options")) {
+             setError("Erro de compatibilidade (Photo Options). Tente outro navegador.")
+        } else {
+             setError(`Erro: ${err.message || "Falha ao iniciar câmera"}`)
         }
       }
-    ).then((controls) => {
-      controlsRef.current = controls
-    }).catch((err) => {
-      console.error("Erro ao iniciar câmera:", err)
-    })
+    };
 
-    // Cleanup: Para a câmera quando o componente desmontar
+    startCamera();
+
+    // Cleanup: Executado quando o componente desmonta (fecha o modal)
     return () => {
-      if (controlsRef.current) {
-        controlsRef.current.stop()
+      isMounted = false; // Marca como desmontado para impedir atualizações assíncronas
+
+      if (controls) {
+        controls.stop();
+      }
+      
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
       }
     }
   }, [onResult])
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[60] bg-black/95 flex flex-col items-center justify-center animate-in fade-in duration-200 p-4">
       <button 
         onClick={onClose} 
         className="absolute top-6 right-6 text-white bg-white/20 p-3 rounded-full backdrop-blur-md hover:bg-white/30 transition-all z-50"
@@ -65,28 +132,35 @@ function BarcodeScanner({ onResult, onClose }: { onResult: (code: string) => voi
         <X className="w-6 h-6" />
       </button>
       
-      <div className="relative w-full max-w-md aspect-[3/4] bg-black overflow-hidden rounded-3xl border border-white/10 shadow-2xl mx-4">
-        {/* Elemento de vídeo onde o stream da câmera será renderizado */}
-        <video ref={videoRef} className="w-full h-full object-cover" />
-        
-        {/* Overlay visual de scan (Mira) */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-72 h-48 border-2 border-primary/80 rounded-2xl relative shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-            <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-primary -mt-1 -ml-1 rounded-tl-lg"></div>
-            <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-primary -mt-1 -mr-1 rounded-tr-lg"></div>
-            <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-primary -mb-1 -ml-1 rounded-bl-lg"></div>
-            <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-primary -mb-1 -mr-1 rounded-br-lg"></div>
-            
-            {/* Linha de scan animada */}
-            <div className="w-full h-0.5 bg-red-500/80 absolute top-1/2 -translate-y-1/2 animate-[pulse_2s_ease-in-out_infinite] shadow-[0_0_15px_rgba(239,68,68,0.8)]"></div>
+      <div className="relative w-full max-w-md aspect-[3/4] bg-black overflow-hidden rounded-3xl border border-white/10 shadow-2xl flex items-center justify-center">
+        {error ? (
+          <div className="p-6 text-center text-white">
+            <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-red-400 mb-2">Erro na Câmera</h3>
+            <div className="text-sm text-gray-300 leading-relaxed">
+              {error}
+            </div>
           </div>
-        </div>
-        
-        <div className="absolute bottom-8 left-0 right-0 text-center">
-            <p className="text-white/90 font-medium bg-black/50 inline-block px-4 py-2 rounded-full backdrop-blur-sm text-sm">
-                Aponte para o código de barras
-            </p>
-        </div>
+        ) : (
+          <>
+            {/* playsInline é crucial para iOS */}
+            <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-72 h-48 border-2 border-primary/80 rounded-2xl relative shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-primary -mt-1 -ml-1 rounded-tl-lg"></div>
+                <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-primary -mt-1 -mr-1 rounded-tr-lg"></div>
+                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-primary -mb-1 -ml-1 rounded-bl-lg"></div>
+                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-primary -mb-1 -mr-1 rounded-br-lg"></div>
+                <div className="w-full h-0.5 bg-red-500/80 absolute top-1/2 -translate-y-1/2 animate-[pulse_2s_ease-in-out_infinite] shadow-[0_0_15px_rgba(239,68,68,0.8)]"></div>
+              </div>
+            </div>
+            <div className="absolute bottom-8 left-0 right-0 text-center">
+                <p className="text-white/90 font-medium bg-black/50 inline-block px-4 py-2 rounded-full backdrop-blur-sm text-sm">
+                    Aponte para o código de barras
+                </p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -99,7 +173,7 @@ interface Produto {
   nome: string
   marca: string
   quantidade_embalagem_g: number
-  imagem?: string // URL da imagem vinda do DB
+  imagem?: string 
   info_nutricional: {
     calorias: number
   }
@@ -118,83 +192,77 @@ export default function BodyDispensa() {
   const [searchTerm, setSearchTerm] = useState("")
   const [error, setError] = useState("")
   
-  // Estados para o Scanner
   const [showScanner, setShowScanner] = useState(false)
   const [processingScan, setProcessingScan] = useState(false)
 
-  // 1. Carregar dados iniciais
   useEffect(() => {
     fetchDispensa()
   }, [])
 
   const fetchDispensa = async () => {
     try {
+      // Usando URL relativa. O Proxy do next.config.mjs redireciona /api -> localhost:8000/api
       const res = await fetch(`${API_URL}/api/dispensa/`)
-      if (!res.ok) throw new Error("Falha ao conectar com o servidor")
+      
+      if (!res.ok) throw new Error(`Status: ${res.status}`)
       const data = await res.json()
       setItems(data)
-    } catch (err) {
+      setError("")
+    } catch (err: any) {
       console.error(err)
-      setError("Erro ao carregar dispensa.")
+      setError(`Erro ao carregar dados.`)
     } finally {
       setLoading(false)
     }
   }
 
-  // 2. Atualizar Quantidade (+1 ou -1)
   const handleUpdateQuantity = async (barcode: string, delta: number) => {
     try {
-      // Otimização Otimista: Atualiza a UI imediatamente antes do servidor responder
       const newItems = items.map(item => {
         if (item.produto.id_codigo_barras === barcode) {
           const newQtd = Math.max(0, item.quantidade_unidades + delta)
           return { ...item, quantidade_unidades: newQtd }
         }
         return item
-      }).filter(item => item.quantidade_unidades > 0) // Remove visualmente se for 0
+      }).filter(item => item.quantidade_unidades > 0)
       
       setItems(newItems)
 
-      // Chama o backend
-      // NOTA: O backend deve suportar query params: ?quantidade=1 ou ?quantidade=-1
       const res = await fetch(`${API_URL}/api/dispensa/adicionar/${barcode}?quantidade=${delta}`, {
         method: "POST"
       })
       
       if (!res.ok) throw new Error("Erro na API")
-      
-      // Sincroniza estado real após sucesso (opcional, mas seguro)
-      fetchDispensa()
+      // fetchDispensa() // Opcional
 
-    } catch (err) {
-      alert("Erro ao atualizar estoque. Revertendo...")
+    } catch (err: any) {
+      alert("Erro de conexão ao atualizar.")
       fetchDispensa()
     }
   }
 
-  // 3. Processar resultado do Scanner
   const handleScanResult = async (barcode: string) => {
-    // Evita leituras duplicadas muito rápidas
     if (processingScan) return
     setProcessingScan(true)
-    
-    // Feedback tátil/sonoro seria ideal aqui
-    setShowScanner(false) // Fecha a câmera
+    setShowScanner(false)
 
     try {
-        // Adiciona 1 unidade do produto escaneado
       const res = await fetch(`${API_URL}/api/dispensa/adicionar/${barcode}?quantidade=1`, {
         method: "POST"
       })
       
+      if (res.ok) {
+        fetchDispensa()
+      } else {
+        alert("Produto não encontrado no banco.")
+      }
     } catch (err) {
-      alert("Erro de conexão ao processar escaneamento.")
+      alert(`Erro ao conectar com a API.`)
     } finally {
       setProcessingScan(false)
     }
   }
 
-  // Filtro de busca local
   const filteredItems = items.filter(item => 
     item.produto.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.produto.marca.toLowerCase().includes(searchTerm.toLowerCase())
@@ -204,7 +272,6 @@ export default function BodyDispensa() {
     <div className="min-h-screen bg-background max-w-lg mx-auto relative font-sans antialiased pb-24">
       <Header />
 
-      {/* --- MODAL DO SCANNER --- */}
       {showScanner && (
         <BarcodeScanner 
           onResult={handleScanResult} 
@@ -218,7 +285,6 @@ export default function BodyDispensa() {
           <p className="text-sm text-muted-foreground font-medium">Controle de estoque e mantimentos</p>
         </header>
 
-        {/* Barra de Busca */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
@@ -230,7 +296,6 @@ export default function BodyDispensa() {
           />
         </div>
 
-        {/* Lista de Itens */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">
@@ -240,9 +305,13 @@ export default function BodyDispensa() {
           </div>
           
           {error && (
-            <div className="p-4 rounded-xl bg-red-50 text-red-600 text-sm flex items-center gap-2 border border-red-200">
-              <AlertTriangle className="w-4 h-4" />
-              {error}
+            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex flex-col gap-2">
+              <div className="flex items-center gap-2 font-bold">
+                <WifiOff className="w-4 h-4" />
+                Sem Conexão
+              </div>
+              <p>{error}</p>
+              <button onClick={fetchDispensa} className="underline text-left mt-2">Tentar novamente</button>
             </div>
           )}
 
@@ -258,28 +327,24 @@ export default function BodyDispensa() {
             </div>
           )}
 
-          {/* Cards de Produtos */}
           {filteredItems.map((item, index) => (
             <div 
               key={`${item.produto.id_codigo_barras}-${index}`}
               className="bg-card rounded-2xl p-3 shadow-sm border border-border/50 flex items-center justify-between group transition-all hover:border-primary/30"
             >
               <div className="flex items-center gap-3 overflow-hidden flex-1">
-                {/* Imagem do Produto */}
                 <div className="w-12 h-12 rounded-xl bg-secondary/30 flex items-center justify-center shrink-0 overflow-hidden relative border border-border">
                   {item.produto.imagem ? (
                     <img 
                       src={item.produto.imagem} 
                       alt={item.produto.nome}
                       className="w-full h-full object-cover"
-                      // Fallback se a imagem quebrar
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                         e.currentTarget.nextElementSibling?.classList.remove('hidden');
                       }}
                     />
                   ) : null}
-                  {/* Ícone Fallback */}
                   <Package className={`w-5 h-5 text-muted-foreground/50 ${item.produto.imagem ? 'hidden' : ''}`} />
                 </div>
                 
@@ -296,12 +361,10 @@ export default function BodyDispensa() {
                 </div>
               </div>
 
-              {/* Controles de Quantidade */}
               <div className="flex items-center gap-1 bg-secondary/30 p-1 rounded-xl border border-border/50">
                 <button 
                   onClick={() => handleUpdateQuantity(item.produto.id_codigo_barras, -1)}
                   className="w-8 h-8 flex items-center justify-center rounded-lg bg-background shadow-sm text-foreground hover:text-red-600 hover:bg-red-50 active:scale-95 transition-all"
-                  aria-label="Diminuir quantidade"
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
@@ -313,7 +376,6 @@ export default function BodyDispensa() {
                 <button 
                   onClick={() => handleUpdateQuantity(item.produto.id_codigo_barras, 1)}
                   className="w-8 h-8 flex items-center justify-center rounded-lg bg-background shadow-sm text-foreground hover:text-green-600 hover:bg-green-50 active:scale-95 transition-all"
-                  aria-label="Aumentar quantidade"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
@@ -322,7 +384,6 @@ export default function BodyDispensa() {
           ))}
         </div>
 
-        {/* Botões de Ação */}
         <div className="grid grid-cols-2 gap-3 pt-2">
             <button 
                 onClick={() => {
