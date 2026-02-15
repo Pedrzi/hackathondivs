@@ -60,7 +60,7 @@ class OpenFoodFactsService:
             print(f"Erro de conexão: {e}")
             return None
         
-    def buscar_produto_por_nome(self, nome: str, numero_resultados_desejados) -> Optional[List[Dict[str, Any]]]:
+    def buscar_produto_por_nome(self, nome: str, numero_resultados_desejados: int) -> Optional[List[Dict[str, Any]]]:
         if not nome:
             return None
 
@@ -71,7 +71,7 @@ class OpenFoodFactsService:
             "search_simple": 1,
             "action": "process",
             "json": 1,
-            "page_size": 1
+            "page_size": numero_resultados_desejados
         }
 
         try:
@@ -85,7 +85,7 @@ class OpenFoodFactsService:
             products = data.get("products", [])
 
             if products:
-                return products[0:(numero_resultados_desejados-1)]
+                return products[0:numero_resultados_desejados]
             else:
                 print("Nenhum produto encontrado.")
                 return None
@@ -96,6 +96,6 @@ class OpenFoodFactsService:
 
     
 if __name__ == "__main__":
-    print(OpenFoodFactsService().buscar_produto_por_nome("tomate"))
+    print(OpenFoodFactsService().buscar_produto_por_nome("tomate", 10))
     print("\n\n\n")
     print(OpenFoodFactsService().buscar_produto_por_codigo("8445290615350"))
