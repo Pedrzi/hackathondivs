@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from src.services.scanner import ScannerService
 from src.services.calc import CalculadoraAderenciaService
@@ -10,13 +9,6 @@ from src.controllers import pantry_controller, nutricionista_controller, product
 
 
 app = FastAPI(title="Nutrium++ Backend", version="1.0.0")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Permite qualquer origem (Frontend, Mobile, Postman)
-    allow_credentials=True,
-    allow_methods=["*"],  # Permite GET, POST, PUT, DELETE
-    allow_headers=["*"],
-)
 
 # Instância dos serviços (Em apps maiores, usamos injeção de dependência)
 scanner_service = ScannerService()

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from .meals import Macros
 
 class Produto(BaseModel):
@@ -7,6 +7,7 @@ class Produto(BaseModel):
     nome: str
     marca: str = "Desconhecida"
     quantidade_embalagem_g: float = 0
+    imagem_url: Optional[str] = None
     
     # Informação nutricional padronizada (por 100g ou porção)
     info_nutricional: Macros
@@ -15,7 +16,7 @@ class Produto(BaseModel):
     dados_brutos: Optional[Dict[str, Any]] = Field(default=None, exclude=True)
 
     @classmethod
-    def criar_do_openfoodfacts(cls, dados: Dict[str, Any]):
+    def criar_do_openfoodfacts(cls, dados: List[Dict[str, Any]]):
         """Factory method para limpar os dados da API externa"""
         nutrientes = dados.get('nutriments', {})
         
@@ -32,6 +33,7 @@ class Produto(BaseModel):
             nome=dados.get('product_name', 'Produto Sem Nome'),
             marca=dados.get('brands', 'Genérico'),
             quantidade_embalagem_g=float(dados.get('product_quantity', 0)),
+            imagem_url=dados.get('image_url'),
             info_nutricional=macros,
             dados_brutos=dados
         )
