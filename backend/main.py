@@ -6,7 +6,7 @@ from src.services.calc import CalculadoraAderenciaService
 from src.services.openfoodfacts import OpenFoodFactsService # (Implementação simples abaixo)
 from src.models.meals import Refeicao
 from src.models.products import Produto
-from src.controllers import pantry_controller, nutricionista_controller
+from src.controllers import pantry_controller, nutricionista_controller, product_controller
 
 
 app = FastAPI(title="Nutrium++ Backend", version="1.0.0")
@@ -68,6 +68,7 @@ def rota_calcular_aderencia(dados: RequestCalculoAderencia):
 
 app.include_router(pantry_controller.router)
 app.include_router(nutricionista_controller.router)
+app.include_router(product_controller.router)
 
 if __name__ == "__main__":
     import uvicorn
