@@ -1,19 +1,27 @@
 'use client'
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Header } from "@/components/nutrition/header"
 import { 
   Calendar, Users, ChevronDown, ChevronUp, Clock, 
   UserCircle, ExternalLink, Search, CheckCircle2, Plus, 
-  Utensils, BookOpen, FolderPlus, ChevronRight, FileText, Upload, Home
+  Utensils, BookOpen, FolderPlus, ChevronRight, FileText, Upload, Home,
+  Loader2, AlertTriangle
 } from "lucide-react"
 import Link from "next/link"
 
-const pacientesMock = [
-  { id: 1, nome: "João Silva", objetivo: "Perda de Peso", score: 2 }, // Vermelho
-  { id: 2, nome: "Maria Santos", objetivo: "Hipertrofia", score: 6 }, // Laranja
-  { id: 3, nome: "Pedro Costa", objetivo: "Saúde", score: 9 },      // Verde
-]
+// ID do Nutricionista para a Demo (Hardcoded)
+const NUTRI_ID = "928f6268-0adf-40e4-bc63-caca92e5f708"
+
+// Interface atualizada para bater com o Backend (name em vez de nome)
+interface PacienteDB {
+  id: string
+  name: string // <--- Atualizado
+  age: number
+  height: number
+  weight: number
+  attention_score: number
+}
 
 const initialPlanos = [
   { id: 1, tipo: "Hipertrofia", total: 5, fileName: "guia_hipertrofia.pdf" },
@@ -23,16 +31,39 @@ const initialPlanos = [
 
 export default function BodyNutricionista() {
   const [expandConsultas, setExpandConsultas] = useState(true)
-  const [expandPacientes, setExpandPacientes] = useState(false)
+  const [expandPacientes, setExpandPacientes] = useState(true)
   const [expandPlanos, setExpandPlanos] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   
+  const [pacientes, setPacientes] = useState<PacienteDB[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
   const [planos, setPlanos] = useState(initialPlanos)
   const [novoTipoDieta, setNovoTipoDieta] = useState("")
   const [showAddDieta, setShowAddDieta] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [activePlanoId, setActivePlanoId] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetchPacientes()
+  }, [])
+
+  const fetchPacientes = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch(`/api/nutricionista/${NUTRI_ID}/pacientes`)
+      if (!res.ok) throw new Error("Erro ao buscar pacientes")
+      const data = await res.json()
+      setPacientes(data)
+    } catch (err) {
+      console.error(err)
+      setError("Não foi possível carregar a lista de pacientes.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const adicionarTipoDieta = () => {
     if (novoTipoDieta.trim() !== "") {
@@ -57,6 +88,17 @@ export default function BodyNutricionista() {
     fileInputRef.current?.click()
   }
 
+  const getStatusColor = (score: number) => {
+    if (score < 3) return "bg-red-500"
+    if (score <= 5) return "bg-yellow-500"
+    return "bg-green-500"
+  }
+
+  const filteredPacientes = pacientes.filter(p => 
+    (p.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) || 
+    (p.age.toString() + " anos").includes(searchTerm)
+  )
+
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative font-sans antialiased">
       <Header />
@@ -69,7 +111,6 @@ export default function BodyNutricionista() {
       />
 
       <main className="p-4 pb-12 space-y-6">
-        {/* HEADER DO PAINEL */}
         <header className="mt-2 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Painel Profissional</h1>
@@ -95,7 +136,6 @@ export default function BodyNutricionista() {
           </div>
         </header>
 
-        {/* SEÇÃO DE CONSULTAS */}
         <section className="space-y-3">
           <button 
             onClick={() => setExpandConsultas(!expandConsultas)}
@@ -123,7 +163,7 @@ export default function BodyNutricionista() {
                 </h3>
                 <div className="bg-card p-4 rounded-xl border border-border/40 shadow-sm flex justify-between items-center">
                   <div>
-                    <p className="text-sm font-bold">Maria Santos</p>
+                    <p className="text-sm font-bold">Paciente Exemplo</p>
                     <p className="text-[10px] text-muted-foreground">Hoje, às 14:30h</p>
                   </div>
                   <button className="text-xs font-bold text-[#5b8def] px-3 py-1 bg-[#e5f1ff] rounded-lg hover:brightness-95 transition-all">
@@ -131,26 +171,10 @@ export default function BodyNutricionista() {
                   </button>
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <h3 className="text-[10px] font-bold text-muted-foreground uppercase ml-2 flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-orange-400" /> Por Agendar
-                </h3>
-                <div className="p-4 rounded-xl border border-border/40 shadow-sm flex justify-between items-center bg-orange-50/30">
-                  <div>
-                    <p className="text-sm font-bold text-foreground">João Silva</p>
-                    <p className="text-[10px] text-orange-600 font-medium">Solicitou há 2 horas</p>
-                  </div>
-                  <button className="text-[10px] font-bold text-white px-3 py-1.5 bg-orange-400 rounded-lg shadow-sm hover:bg-orange-500 transition-colors">
-                    Marcar Data
-                  </button>
-                </div>
-              </div>
             </div>
           )}
         </section>
 
-        {/* SEÇÃO DE PACIENTES */}
         <section className="space-y-3">
           <button 
             onClick={() => setExpandPacientes(!expandPacientes)}
@@ -176,44 +200,58 @@ export default function BodyNutricionista() {
                 />
               </div>
 
+              {loading && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              )}
+
+              {error && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-xs">
+                  <AlertTriangle className="w-4 h-4" />
+                  {error}
+                </div>
+              )}
+
               <div className="space-y-2">
-                {pacientesMock.filter(p => p.nome.toLowerCase().includes(searchTerm.toLowerCase())).map((paciente) => {
-                  // Lógica de cores baseada no score (0-10)
-                  const getStatusColor = (n: number) => {
-                    if (n <= 3) return "bg-red-500"
-                    if (n <= 7) return "bg-orange-500"
-                    return "bg-green-500"
-                  }
+                {!loading && filteredPacientes.length === 0 && (
+                  <p className="text-center text-xs text-muted-foreground py-4">Nenhum paciente encontrado.</p>
+                )}
 
-                  return (
-                    <div key={paciente.id} className="bg-card p-4 rounded-xl border border-border/40 shadow-sm flex justify-between items-center group hover:border-primary transition-all">
-                      <div>
-                        <p className="text-sm font-bold text-foreground">{paciente.nome}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold">Objetivo: {paciente.objetivo}</p>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        {/* Quadradinho com número e cor dinâmica */}
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black text-white shadow-sm ${getStatusColor(paciente.score)}`}>
-                          {paciente.score}
-                        </div>
-
-                        <Link 
-                          href={`/nutricionista/${paciente.id}`} 
-                          className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </Link>
-                      </div>
+                {filteredPacientes.map((paciente) => (
+                  <div key={paciente.id} className="bg-card p-4 rounded-xl border border-border/40 shadow-sm flex justify-between items-center group hover:border-primary transition-all">
+                    <div>
+                      {/* USANDO O CAMPO NAME */}
+                      <p className="text-sm font-bold text-foreground capitalize">
+                        {paciente.name || `Paciente ${paciente.id.substring(0,6)}`}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold">
+                        {paciente.age} anos • {paciente.weight}kg
+                      </p>
                     </div>
-                  )
-                })}
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col items-end mr-1">
+                        <span className="text-[9px] text-muted-foreground font-semibold uppercase">Aderência</span>
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black text-white shadow-sm ${getStatusColor(paciente.attention_score)}`}>
+                          {paciente.attention_score}
+                        </div>
+                      </div>
+
+                      <Link 
+                        href={`/nutricionista/${paciente.id}`} 
+                        className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
         </section>
 
-        {/* SEÇÃO DE PLANOS ALIMENTARES */}
         <section className="space-y-3">
           <button 
             onClick={() => setExpandPlanos(!expandPlanos)}
