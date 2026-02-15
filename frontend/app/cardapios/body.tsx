@@ -9,22 +9,22 @@ import { Clock, Plus, Search, ChevronDown, ChevronUp } from "lucide-react"
 // Estrutura de dados simulando o que viria do banco de dados/nutricionista 
 const mockData = {
   breakfast: [
-    { id: 1, name: "Bowl de Frutas", kcal: 320, time: "15 min", image: "/images/meal-smoothie.jpg" },
-    { id: 2, name: "Panqueca de Aveia", kcal: 280, time: "10 min", image: "" },
-    { id: 3, name: "Ovos Mexidos", kcal: 210, time: "5 min", image: "" },
+    { id: 1, name: "Bowl de Frutas", kcal: 320, time: "15 min", image: "/assets/fruitSalad.jpg" },
+    { id: 2, name: "Panqueca de Aveia", kcal: 280, time: "10 min", image: "/assets/pancakes.jpg" },
+    { id: 3, name: "Ovos Mexidos", kcal: 210, time: "5 min", image: "/assets/scrambledEggs.jpg" },
   ],
   lunch: [
-    { id: 4, name: "Frango Grelhado", kcal: 450, time: "25 min", image: "/images/meal-chicken.jpg" },
-    { id: 5, name: "Salada Mediterrânea", kcal: 380, time: "15 min", image: "/images/meal-salad.jpg" },
-    { id: 6, name: "Peixe Assado", kcal: 410, time: "30 min", image: "" },
+    { id: 4, name: "Frango Grelhado", kcal: 450, time: "25 min", image: "/assets/grilledChickenRice.jpg" },
+    { id: 5, name: "Salada Mediterrânea", kcal: 380, time: "15 min", image: "/assets/greenSaladBowl.jpg" },
+    { id: 6, name: "Peixe Assado", kcal: 410, time: "30 min", image: "/assets/bakedSalmonVegetables.jpg" },
   ],
   dinner: [
-    { id: 7, name: "Sopa de Legumes", kcal: 180, time: "20 min", image: "" },
-    { id: 8, name: "Omelete de Espinafre", kcal: 240, time: "10 min", image: "" },
+    { id: 7, name: "Sopa de Legumes", kcal: 180, time: "20 min", image: "/assets/vegetableSoupBowl.jpg" },
+    { id: 8, name: "Omelete de Espinafre", kcal: 240, time: "10 min", image: "/assets/espinafre.jpg" },
   ],
   snack: [
-    { id: 9, name: "Iogurte Natural", kcal: 120, time: "2 min", image: "" },
-    { id: 10, name: "Mix de Castanhas", kcal: 160, time: "1 min", image: "" },
+    { id: 9, name: "Iogurte Natural", kcal: 120, time: "2 min", image: "/assets/yogurtFruitBowl.jpg" },
+    { id: 10, name: "Mix de Castanhas", kcal: 160, time: "1 min", image: "/assets/castanhas.png" },
   ],
 }
 

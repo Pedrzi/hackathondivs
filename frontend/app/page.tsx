@@ -1,151 +1,75 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 
-// Mapeamento técnico transportado da tua demo
-const METADATA_ALIMENTOS: Record<string, { perfil: string; icon: string }> = {
-  "Panquecas": { perfil: "Indulgente", icon: "🥞" },
-  "Ovos": { perfil: "Saudável", icon: "🍳" },
-  "Fruta": { perfil: "Saudável", icon: "🍎" },
-  "Massa": { perfil: "Conveniência", icon: "🍝" },
-  "Grelhado": { perfil: "Saudável", icon: "🍗" },
-  "Salada": { perfil: "Saudável", icon: "🥗" },
-  "Sopa": { perfil: "Leve", icon: "🥣" },
-  "Peixe": { perfil: "Saudável", icon: "🐟" },
-  "Leve": { perfil: "Conveniência", icon: "🥪" },
-  "Doce": { perfil: "Indulgente", icon: "🍦" },
-  "Café": { perfil: "Funcional", icon: "☕" },
-};
-
-export default function PerfilPage() {
-  const [respostas, setRespostas] = useState({
-    nome: "",
-    idade: "",
-    dieta: "",
-    alergias: [] as string[],
-    preferencia_paladar: "Doce",
-    escolhas: { pequeno_almoco: "", almoco: "", jantar: "", sobremesa: "" }
-  });
-
-  const [persona, setPersona] = useState<string | null>(null);
-
-  const handleEscolha = (refeicao: string, prato: string) => {
-    setRespostas({
-      ...respostas,
-      escolhas: { ...respostas.escolhas, [refeicao]: prato }
-    });
-  };
-
-  const finalizarECategorizar = () => {
-    let puntosSaudavel = 0;
-    let puntosIndulgente = 0;
-
-    Object.values(respostas.escolhas).forEach(escolha => {
-      if (METADATA_ALIMENTOS[escolha]?.perfil === "Saudável") puntosSaudavel++;
-      if (METADATA_ALIMENTOS[escolha]?.perfil === "Indulgente") puntosIndulgente++;
-    });
-
-    let resultado = "Utilizador de Conveniência";
-    if (puntosSaudavel >= 2) resultado = "Utilizador Saudável Consistente";
-    else if (puntosIndulgente >= 1) resultado = "Utilizador Indulgente Ocasional";
-
-    setPersona(resultado);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#F4F7F6] pb-20 font-sans">
-      {/* Header igual ao Flet */}
-      <div className="bg-white p-8 shadow-sm text-center border-b-4 border-[#27ae60]">
-        <h1 className="text-4xl font-black text-[#27ae60] mb-2">Personalização Nutrium</h1>
-        <p className="text-gray-500 italic">Motor de Classificação de Personas</p>
-      </div>
+    <div className="min-h-screen bg-[#F4F7F6] font-sans text-black">
+      {/* Hero Section */}
+      <nav className="bg-white p-6 shadow-sm flex justify-between items-center border-b-2 border-green-100">
+        <h1 className="text-2xl font-black text-[#27ae60] tracking-tighter">NUTRIUM++</h1>
+        <div className="space-x-4">
+          <Link href="/perfil" className="bg-[#27ae60] text-white px-6 py-2 rounded-full font-bold hover:bg-[#219150] transition-all text-sm">
+            O MEU PERFIL
+          </Link>
+        </div>
+      </nav>
 
-      <div className="max-w-2xl mx-auto p-6 space-y-10">
-        
-        {persona && (
-          <div className="bg-[#27ae60] text-white p-6 rounded-3xl shadow-xl text-center animate-bounce">
-            <h2 className="text-xl font-bold">Perfil Sincronizado!</h2>
-            <p className="text-2xl font-black mt-2">{persona}</p>
-          </div>
-        )}
+      <main className="max-w-4xl mx-auto pt-16 px-6 text-center">
+        <div className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          <span className="bg-green-100 text-[#27ae60] px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">
+            Hackathon Edition 2026
+          </span>
+          <h2 className="text-6xl font-black mt-6 leading-tight">
+            Nutrição Inteligente <br />
+            <span className="text-[#27ae60]">Baseada em IA.</span>
+          </h2>
+          <p className="text-gray-500 mt-6 text-lg max-w-xl mx-auto">
+            Personaliza a tua dieta, gere as tuas alergias e descobre o cardápio ideal para o teu estilo de vida.
+          </p>
+        </div>
 
-        {/* 1. Identificação */}
-        <section className="bg-white p-6 rounded-3xl shadow-sm">
-          <h3 className="text-[#27ae60] font-bold text-lg mb-4 underline decoration-2">1. Identificação</h3>
-          <div className="flex gap-4">
-            <input 
-              type="text" placeholder="Nome" 
-              className="flex-1 p-4 rounded-2xl border-2 border-gray-100 focus:border-[#27ae60] outline-none"
-              onChange={(e) => setRespostas({...respostas, nome: e.target.value})}
-            />
-            <input 
-              type="number" placeholder="Idade" 
-              className="w-24 p-4 rounded-2xl border-2 border-gray-100 focus:border-[#27ae60] outline-none"
-              onChange={(e) => setRespostas({...respostas, idade: e.target.value})}
-            />
-          </div>
-        </section>
-
-        {/* 2. Estilo e Alergias */}
-        <section className="bg-white p-6 rounded-3xl shadow-sm">
-          <h3 className="text-[#27ae60] font-bold text-lg mb-4 underline decoration-2">2. Estilo e Alergias</h3>
-          <select 
-            className="w-full p-4 rounded-2xl border-2 border-gray-100 mb-6 outline-none bg-white"
-            onChange={(e) => setRespostas({...respostas, dieta: e.target.value})}
-          >
-            <option value="">Estilo de Alimentação</option>
-            <option value="Vegetariana">Vegetariana</option>
-            <option value="Vegana">Vegana</option>
-            <option value="Keto">Keto / Low Carb</option>
-          </select>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            {["Lactose", "Glúten", "Frutos Secos", "Marisco"].map(al => (
-              <label key={al} className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl">
-                <input type="checkbox" className="accent-[#27ae60] w-5 h-5" /> {al}
-              </label>
-            ))}
-          </div>
-        </section>
-
-        {/* Seleção Visual de Refeições com Emojis */}
-        {[
-          { key: "pequeno_almoco", label: "Pequeno-Almoço", itens: ["Panquecas", "Ovos", "Fruta"] },
-          { key: "almoco", label: "Almoço", itens: ["Massa", "Grelhado", "Salada"] },
-          { key: "jantar", label: "Jantar", itens: ["Sopa", "Peixe", "Leve"] },
-          { key: "sobremesa", label: "Sobremesa", itens: ["Café", "Fruta", "Doce"] }
-        ].map((refeicao) => (
-          <section key={refeicao.key}>
-            <h3 className="text-[#27ae60] font-bold text-center text-lg mb-4">{refeicao.label}</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {refeicao.itens.map(item => (
-                <div 
-                  key={item}
-                  onClick={() => handleEscolha(refeicao.key, item)}
-                  className={`p-4 rounded-3xl border-2 cursor-pointer transition-all flex flex-col items-center gap-2 ${
-                    (respostas.escolhas as any)[refeicao.key] === item 
-                      ? "border-[#27ae60] bg-green-50" 
-                      : "border-gray-50 bg-white"
-                  }`}
-                >
-                  <span className="text-4xl">{METADATA_ALIMENTOS[item]?.icon}</span>
-                  <span className="font-bold text-[10px] uppercase">{item}</span>
-                  {/* Espaço reservado para imagem futura: <div className="hidden bg-gray-200 w-full h-12 rounded-lg"></div> */}
-                </div>
-              ))}
+        {/* Quick Actions Card */}
+        <div className="grid md:grid-cols-2 gap-6 mt-16">
+          <Link href="/perfil" className="group bg-white p-8 rounded-[40px] shadow-sm border-2 border-transparent hover:border-[#27ae60] transition-all text-left relative overflow-hidden">
+            <div className="relative z-10">
+              <span className="text-4xl mb-4 block">🧪</span>
+              <h3 className="text-xl font-black mb-2">Configurar Perfil IA</h3>
+              <p className="text-sm text-gray-400">Define as tuas alergias, paladar e objetivos nutricionais em 2 minutos.</p>
             </div>
-          </section>
-        ))}
+            <div className="absolute -right-4 -bottom-4 text-8xl opacity-5 group-hover:opacity-10 transition-opacity">🥗</div>
+          </Link>
 
-        {/* Botão Final */}
-        <button 
-          onClick={finalizarECategorizar}
-          className="w-full bg-[#27ae60] text-white font-black py-6 rounded-3xl shadow-2xl hover:bg-[#219150] active:scale-95 transition-all text-xl"
-        >
-          FINALIZAR E CATEGORIZAR
-        </button>
+          <Link href="/cardapios" className="group bg-white p-8 rounded-[40px] shadow-sm border-2 border-transparent hover:border-[#27ae60] transition-all text-left relative overflow-hidden">
+            <div className="relative z-10">
+              <span className="text-4xl mb-4 block">📅</span>
+              <h3 className="text-xl font-black mb-2">Ver Cardápios</h3>
+              <p className="text-sm text-gray-400">Acede às receitas filtradas especificamente para o teu perfil técnico.</p>
+            </div>
+            <div className="absolute -right-4 -bottom-4 text-8xl opacity-5 group-hover:opacity-10 transition-opacity">🍲</div>
+          </Link>
+        </div>
 
-      </div>
+        {/* Estatísticas Fictícias para a Demo */}
+        <div className="mt-20 grid grid-cols-3 gap-8 border-t border-gray-200 pt-12 text-center">
+          <div>
+            <p className="text-3xl font-black text-[#27ae60]">100%</p>
+            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Personalizado</p>
+          </div>
+          <div>
+            <p className="text-3xl font-black text-[#27ae60]">RAW</p>
+            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Data Processing</p>
+          </div>
+          <div>
+            <p className="text-3xl font-black text-[#27ae60]">API</p>
+            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">FastAPI Sync</p>
+          </div>
+        </div>
+      </main>
+      
+      <footer className="mt-20 text-center pb-10">
+        <p className="text-gray-300 text-[10px] font-bold uppercase tracking-widest">Desenvolvido pela Equipa Nutrium++ | Braga 2026</p>
+      </footer>
     </div>
   );
 }

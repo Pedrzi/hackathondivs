@@ -3,26 +3,26 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// Base de dados para renderização das imagens
-const METADATA_ALIMENTOS: Record<string, { img: string }> = {
-  "Panquecas": { img: "/assets/pancakes.jpg" },
-  "Ovos": { img: "/assets/scrambledEggs.jpg" },
-  "Fruta": { img: "/assets/yogurtFruitBowl.jpg" },
-  "Massa": { img: "/assets/spaghetti.jpg" },
-  "Grelhado": { img: "/assets/grilledChickenRice.jpg" },
-  "Salada": { img: "/assets/greenSaladBowl.jpg" },
-  "Sopa": { img: "/assets/vegetableSoupBowl.jpg" },
-  "Peixe": { img: "/assets/bakedSalmonVegetables.jpg" },
-  "Leve": { img: "/assets/fruitSalad.jpg" },
-  "Doce": { img: "/assets/chocolateDessert.jpg" },
-  "Café": { img: "/assets/coffe.jpg" },
+const IMAGENS_PRATOS = {
+  "Panquecas": "/assets/pancakes.jpg",
+  "Ovos": "/assets/scrambledEggs.jpg",
+  "Fruta": "/assets/yogurtFruitBowl.jpg",
+  "Massa": "/assets/spaghetti.jpg",
+  "Grelhado": "/assets/grilledChickenRice.jpg",
+  "Salada": "/assets/greenSaladBowl.jpg",
+  "Sopa": "/assets/vegetableSoupBowl.jpg",
+  "Peixe": "/assets/bakedSalmonVegetables.jpg",
+  "Leve": "/assets/fruitSalad.jpg",
+  "Doce": "/assets/chocolateDessert.jpg",
+  "Café": "/assets/coffe.jpg",
 };
 
-export default function PerfilPage() {
+export default function PerfilNutrium() {
   const router = useRouter();
-  
-  // Objeto com TODOS os dados puros para o backend
-  const [respostas, setRespostas] = useState({
+  const [enviado, setEnviado] = useState(false);
+  const [progresso, setProgresso] = useState(0);
+
+  const [form, setForm] = useState({
     nome: "",
     idade: "",
     agua: 4,
@@ -30,187 +30,170 @@ export default function PerfilPage() {
     dieta: "",
     alergias: [] as string[],
     outra_restricao: "",
-    preferencia_paladar: "Neutro",
-    escolhas: { 
-      pequeno_almoco: "", 
-      almoco: "", 
-      jantar: "", 
-      sobremesa: "" 
-    }
+    paladar: "Neutro",
+    escolhas: { pequeno_almoco: "", almoco: "", jantar: "", sobremesa: "" }
   });
 
-  const [enviado, setEnviado] = useState(false);
-  const [progresso, setProgresso] = useState(0);
-
-  // Lógica de progresso baseada no preenchimento (UX para os juízes)
+  // Cálculo de progresso para a barra superior
   useEffect(() => {
-    let pontos = 0;
-    if (respostas.nome && respostas.idade) pontos += 20;
-    if (respostas.dieta) pontos += 20;
-    const foodCount = Object.values(respostas.escolhas).filter(v => v !== "").length;
-    pontos += (foodCount * 15);
-    setProgresso(Math.min(pontos, 100));
-  }, [respostas]);
+    let p = 0;
+    if (form.nome && form.idade) p += 20;
+    if (form.dieta && form.objetivo) p += 20;
+    const meals = Object.values(form.escolhas).filter(v => v !== "").length;
+    p += (meals * 15);
+    setProgresso(Math.min(p, 100));
+  }, [form]);
 
   const handleIdade = (val: string) => {
-    const num = parseInt(val);
-    // Validação: Apenas números positivos e idades realistas
-    if (val === "" || (num >= 0 && num <= 120)) {
-      setRespostas({...respostas, idade: val});
-    }
+    const n = parseInt(val);
+    if (val === "" || (n >= 0 && n <= 110)) setForm({...form, idade: val});
   };
 
   const toggleAlergia = (al: string) => {
-    setRespostas(prev => ({
+    setForm(prev => ({
       ...prev,
       alergias: prev.alergias.includes(al) ? prev.alergias.filter(a => a !== al) : [...prev.alergias, al]
     }));
   };
 
-  const finalizarPerfil = async () => {
-    // Envio dos dados puros para o servidor
+  const onSubmit = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/perfil", {
+      // Dica: Se fores testar no telemóvel, muda o localhost para o teu IP!
+      const res = await fetch("http://localhost:8000/api/perfil", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(respostas), 
+        body: JSON.stringify(form), 
       });
-
-      if (response.ok) setEnviado(true);
-    } catch (error) {
-      console.error("Falha na ligação ao servidor. Dados guardados localmente.");
-      localStorage.setItem("perfil_final", JSON.stringify(respostas));
+      if (res.ok) setEnviado(true);
+    } catch (err) {
+      // Fallback local se o backend do Pedro estiver offline
+      console.warn("API Offline. Guardando no browser...");
+      localStorage.setItem("nutrium_backup", JSON.stringify(form));
       setEnviado(true);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7F6] pb-20 font-sans text-black relative">
+    <div className="min-h-screen bg-[#F8FAFB] pb-20 font-sans text-slate-900">
       
-      {/* Barra de Progresso Superior */}
-      <div className="fixed top-0 left-0 w-full h-2 bg-gray-200 z-50">
-        <div className="h-full bg-[#27ae60] transition-all duration-500" style={{ width: `${progresso}%` }} />
+      {/* Progresso */}
+      <div className="fixed top-0 left-0 w-full h-1.5 bg-slate-200 z-[100]">
+        <div className="h-full bg-[#27ae60] transition-all duration-700 ease-out" style={{ width: `${progresso}%` }} />
       </div>
 
-      <button onClick={() => router.back()} className="absolute top-8 left-6 z-10 bg-white p-3 rounded-full shadow-md border border-gray-100 hover:scale-110 transition-all">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27ae60" strokeWidth="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      </button>
+      <header className="bg-white p-6 pt-10 shadow-sm border-b border-slate-100 flex items-center justify-between">
+        <button onClick={() => router.back()} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#27ae60" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <h1 className="text-lg font-black uppercase tracking-tight text-[#27ae60]">Perfil Nutrium++</h1>
+        <div className="w-8" /> 
+      </header>
 
-      <div className="bg-white p-8 shadow-sm text-center border-b-4 border-[#27ae60] mb-8">
-        <h1 className="text-2xl font-black text-[#27ae60] pt-6 uppercase tracking-tighter">Configuração de perfil Nutrium++</h1>
-      </div>
-
-      <div className="max-w-xl mx-auto px-6 space-y-8">
+      <main className="max-w-xl mx-auto p-5 space-y-6">
         
         {enviado && (
-          <div className="bg-white p-8 rounded-[30px] shadow-xl text-center border-2 border-[#27ae60] animate-in fade-in zoom-in">
-            <h2 className="text-[#27ae60] font-black text-xl uppercase italic">Dados sincronizados</h2>
-            <p className="text-gray-500 text-sm mt-2">O seu perfil nutricional foi atualizado com sucesso.</p>
+          <div className="bg-green-500 text-white p-5 rounded-2xl shadow-lg text-center font-bold animate-in fade-in zoom-in duration-300">
+            ✅ Dados Sincronizados com Sucesso!
           </div>
         )}
 
-        {/* 1. Identificação */}
-        <section className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <h3 className="text-gray-400 font-black text-xs mb-4 uppercase">1. Dados pessoais</h3>
-          <div className="flex gap-4">
-            <input type="text" placeholder="O seu nome" className="flex-1 p-4 rounded-xl border-2 border-gray-50 bg-gray-50 focus:border-[#27ae60] outline-none" onChange={(e) => setRespostas({...respostas, nome: e.target.value})} />
+        {/* 1. Identificação - FIXED PARA MOBILE */}
+        <section className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
+          <label className="block text-[10px] font-black text-slate-400 uppercase mb-3">Identificação</label>
+          <div className="flex flex-col sm:flex-row gap-3">
             <input 
-              type="number" 
-              placeholder="Idade" 
-              className="w-24 p-4 rounded-xl border-2 border-gray-50 bg-gray-50 focus:border-[#27ae60] outline-none" 
-              value={respostas.idade}
+              type="text" placeholder="Nome completo" 
+              className="flex-1 p-4 rounded-xl bg-slate-50 border-2 border-transparent focus:border-[#27ae60] focus:bg-white outline-none transition-all"
+              onChange={(e) => setForm({...form, nome: e.target.value})}
+            />
+            <input 
+              type="number" placeholder="Idade" 
+              className="w-full sm:w-24 p-4 rounded-xl bg-slate-50 border-2 border-transparent focus:border-[#27ae60] focus:bg-white outline-none transition-all"
+              value={form.idade}
               onChange={(e) => handleIdade(e.target.value)}
             />
           </div>
         </section>
 
         {/* 2. Hidratação */}
-        <section className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <h3 className="text-gray-400 font-black text-xs mb-4 uppercase">2. Hidratação diária</h3>
-          <div className="p-4 bg-green-50 rounded-xl text-center">
-            <p className="font-bold text-[#27ae60] mb-2">{respostas.agua} Copos de água </p>
-            <input type="range" min="0" max="15" value={respostas.agua} className="w-full accent-[#27ae60]" onChange={(e) => setRespostas({...respostas, agua: parseInt(e.target.value)})} />
+        <section className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
+          <label className="block text-[10px] font-black text-slate-400 uppercase mb-3">Hidratação (Copos/Dia)</label>
+          <div className="flex items-center gap-4 p-2">
+            <span className="text-2xl">💧</span>
+            <input 
+              type="range" min="0" max="15" value={form.agua} 
+              className="flex-1 accent-[#27ae60]" 
+              onChange={(e) => setForm({...form, agua: parseInt(e.target.value)})} 
+            />
+            <span className="font-bold text-[#27ae60] min-w-[20px]">{form.agua}</span>
           </div>
         </section>
 
-        {/* 3. Estilo de Dieta */}
-        <section className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <h3 className="text-gray-400 font-black text-xs mb-4 uppercase tracking-widest">3. Estilo de Vida</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {["Vegetariana", "Vegana", "Keto", "Nenhuma"].map(t => (
-              <button key={t} onClick={() => setRespostas({...respostas, dieta: t})} className={`p-3 rounded-xl font-bold text-[10px] border-2 transition-all ${respostas.dieta === t ? "bg-[#27ae60] border-[#27ae60] text-white" : "border-gray-50 text-gray-400"}`}>{t.toUpperCase()}</button>
-            ))}
-          </div>
-        </section>
-
-        {/* 4. Alergias e Intolerâncias */}
-        <section className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-          <h3 className="text-gray-400 font-black text-xs mb-2 uppercase tracking-widest">4. Alergias confirmadas</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {["Lactose", "Glúten", "Frutos Secos", "Marisco"].map(al => (
-              <button key={al} onClick={() => toggleAlergia(al)} className={`p-3 rounded-xl font-bold text-[10px] border-2 ${respostas.alergias.includes(al) ? "bg-red-50 border-red-200 text-red-600 shadow-inner" : "border-gray-50 text-gray-400"}`}>
-                {respostas.alergias.includes(al) ? "🚫 " : ""}{al.toUpperCase()}
-              </button>
-            ))}
-          </div>
-          <textarea placeholder="Alguma outra restrição médica ou alimentar?" className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 text-sm outline-none focus:border-[#27ae60]" rows={2} onChange={(e) => setRespostas({...respostas, outra_restricao: e.target.value})} />
-        </section>
-
-        {/* 5. Objetivo e Paladar */}
-        <section className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+        {/* 3. Restrições e Dieta */}
+        <section className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
           <div>
-            <h3 className="text-gray-400 font-black text-xs mb-4 uppercase tracking-widest">5. Objetivo Nutricional</h3>
-            <select className="w-full p-4 rounded-xl border-2 border-gray-50 bg-gray-50 outline-none focus:border-[#27ae60]" onChange={(e) => setRespostas({...respostas, objetivo: e.target.value})}>
-              <option value="">Qual o seu foco principal?</option>
-              <option value="Perder">Perda de peso</option>
-              <option value="Massa">Ganho de massa muscular</option>
-              <option value="Energia">Melhoria de energia</option>
-            </select>
+            <label className="block text-[10px] font-black text-slate-400 uppercase mb-3 text-center">Tipo de Dieta</label>
+            <div className="grid grid-cols-2 gap-2">
+              {["Vegetariana", "Vegana", "Keto", "Nenhuma"].map(t => (
+                <button 
+                  key={t} onClick={() => setForm({...form, dieta: t})}
+                  className={`py-3 rounded-xl font-bold text-[10px] border-2 transition-all ${form.dieta === t ? "bg-[#27ae60] border-[#27ae60] text-white" : "bg-slate-50 border-transparent text-slate-400"}`}
+                >
+                  {t.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </div>
-          
+
           <div>
-            <h3 className="text-gray-400 font-black text-xs mb-4 uppercase tracking-widest">6. Preferência de Paladar</h3>
-            <div className="flex gap-2">
-              {["Doce", "Salgado", "Neutro"].map(tipo => (
-                <button key={tipo} onClick={() => setRespostas({...respostas, preferencia_paladar: tipo})} className={`flex-1 py-3 rounded-xl font-bold text-[10px] border-2 ${respostas.preferencia_paladar === tipo ? "bg-[#27ae60] border-[#27ae60] text-white" : "border-gray-50 text-gray-400"}`}>{tipo.toUpperCase()}</button>
+            <label className="block text-[10px] font-black text-slate-400 uppercase mb-3 text-center">Alergias</label>
+            <div className="grid grid-cols-2 gap-2">
+              {["Lactose", "Glúten", "Nozes", "Marisco"].map(al => (
+                <button 
+                  key={al} onClick={() => toggleAlergia(al)}
+                  className={`py-3 rounded-xl font-bold text-[10px] border-2 transition-all ${form.alergias.includes(al) ? "bg-red-50 border-red-100 text-red-600" : "bg-slate-50 border-transparent text-slate-400"}`}
+                >
+                  {al.toUpperCase()}
+                </button>
               ))}
             </div>
           </div>
         </section>
 
-        {/* 7. Preferências Visuais de Refeição */}
+        {/* 4. Escolhas Visuais */}
         {[
-          { k: "pequeno_almoco", l: "Pequeno-Almoço", i: ["Panquecas", "Ovos", "Fruta"] },
-          { k: "almoco", l: "Almoço", i: ["Massa", "Grelhado", "Salada"] },
-          { k: "jantar", l: "Jantar", i: ["Sopa", "Peixe", "Leve"] },
-          { k: "sobremesa", l: "Sobremesa", i: ["Café", "Fruta", "Doce"] }
-        ].map((ref) => (
-          <section key={ref.k}>
-            <h3 className="text-gray-400 font-black text-center text-[9px] mb-3 uppercase tracking-[0.4em]">{ref.l}</h3>
+          { id: "pequeno_almoco", label: "Pequeno-Almoço", options: ["Panquecas", "Ovos", "Fruta"] },
+          { id: "almoco", label: "Almoço", options: ["Massa", "Grelhado", "Salada"] },
+          { id: "jantar", label: "Jantar", options: ["Sopa", "Peixe", "Leve"] }
+        ].map((meal) => (
+          <section key={meal.id} className="space-y-3">
+            <h4 className="text-[10px] font-black text-center text-slate-400 uppercase tracking-[0.2em]">{meal.label}</h4>
             <div className="grid grid-cols-3 gap-3">
-              {ref.i.map(item => (
-                <div 
-                  key={item} 
-                  onClick={() => setRespostas({...respostas, escolhas: {...respostas.escolhas, [ref.k]: item}})} 
-                  className={`group relative aspect-square rounded-[30px] overflow-hidden border-4 transition-all ${ (respostas.escolhas as any)[ref.k] === item ? "border-[#27ae60] scale-105 shadow-xl ring-8 ring-green-100/30" : "border-white hover:border-gray-100 shadow-sm" }`}
+              {meal.options.map(item => (
+                <button 
+                  key={item}
+                  onClick={() => setForm({...form, escolhas: {...form.escolhas, [meal.id]: item}})}
+                  className={`relative aspect-square rounded-[2rem] overflow-hidden border-4 transition-all ${ (form.escolhas as any)[meal.id] === item ? "border-[#27ae60] scale-105 shadow-lg" : "border-white"}`}
                 >
-                  <img src={METADATA_ALIMENTOS[item]?.img} alt={item} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-125" />
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20" />
-                  <span className="relative z-10 font-black text-[7px] text-white text-center px-1 uppercase tracking-tighter flex items-end justify-center h-full pb-4">{item}</span>
-                </div>
+                  <img src={(IMAGENS_PRATOS as any)[item]} alt={item} className="absolute inset-0 w-full h-full object-cover" />
+                  <div className={`absolute inset-0 bg-black/40 flex items-center justify-center p-2 transition-opacity ${ (form.escolhas as any)[meal.id] === item ? "opacity-20" : "opacity-50"}`}>
+                    <span className="text-[8px] text-white font-black uppercase text-center">{item}</span>
+                  </div>
+                </button>
               ))}
             </div>
           </section>
         ))}
 
         <button 
-          onClick={finalizarPerfil} 
-          className="w-full bg-[#27ae60] text-white font-black py-7 rounded-[30px] shadow-2xl hover:translate-y-1 transition-all text-xl mt-12 border-b-8 border-[#1e8449]"
+          onClick={onSubmit}
+          className="w-full bg-[#27ae60] text-white font-black py-6 rounded-[2.5rem] shadow-xl active:scale-[0.98] transition-all text-lg mt-8 hover:shadow-2xl hover:bg-[#219150]"
         >
-          CONFIRMAR DADOS
+          CONFIRMAR PERFIL
         </button>
-      </div>
+
+      </main>
     </div>
   );
 }
