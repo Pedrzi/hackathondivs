@@ -19,7 +19,7 @@ async def obter_produto_por_codigo(codigo_barras: str):
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     
     # Usa a fábrica que criamos no models/produto.py
-    produto_formatado = Produto.criar_do_openfoodfacts([dados_brutos])
+    produto_formatado = Produto.criar_do_openfoodfacts(dados_brutos)
     
     return produto_formatado
 
